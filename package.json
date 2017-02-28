@@ -1,6 +1,6 @@
 {
   "name": "baresoil-devenv",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Lightweight, local Baresoil Cloud emulator.",
   "bin": {
     "baresoil-dev": "lib/main.js",
@@ -19,6 +19,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "async": "^2.1.5",
+    "baresoil-client": "^0.2.0",
     "colors": "^1.1.2",
     "cookie-parser": "^1.4.3",
     "express": "^4.14.1",
