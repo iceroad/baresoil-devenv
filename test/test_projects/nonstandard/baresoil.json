@@ -1,0 +1,8 @@
+{
+  "client": {
+    "path": "dist"
+  },
+  "server": {
+    "path": "magic"
+  }
+}
