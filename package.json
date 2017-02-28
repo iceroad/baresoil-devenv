@@ -1,7 +1,7 @@
 {
   "name": "baresoil-devenv",
   "version": "0.2.0",
-  "description": "Cross-platform, command-line tool for developing and deploying Baresoil applications to the serverless Baresoil Cloud.",
+  "description": "Lightweight, local Baresoil Cloud emulator.",
   "bin": {
     "baresoil-dev": "lib/main.js",
     "bs-dev": "lib/main.js"
