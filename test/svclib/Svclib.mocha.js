@@ -40,7 +40,8 @@ describe('Svclib: Baresoil service library', function() {
 
 
   it('should route "svclib_request" to the correct module' , function(cb) {
-    var kvdSetSpy = sinon.spy(svclib.modules_.KVDataStore.$functions, 'set');
+    var kvdSetStub = sinon.stub(
+        svclib.modules_.KVDataStore.$functions, 'set').yields();
     svclib.accept('svclib_request', baseConnection, {
       requestId: 3,
       service: 'KVDataStore',
@@ -55,12 +56,8 @@ describe('Svclib: Baresoil service library', function() {
     });
     svclib.on('svclib_response', function(baseConnection, svclibResponse) {
       assert.isNotOk(svclibResponse.error);
-      assert(kvdSetSpy.calledOnce);
-      assert.equal(svclibResponse.result.length, 1);
-
-      // Remove spies
+      assert(kvdSetStub.calledOnce);
       svclib.modules_.KVDataStore.$functions.set.restore();
-
       return cb();
     });
   });
@@ -80,6 +77,7 @@ describe('Svclib: Baresoil service library', function() {
         },
         "RealtimeBus": {
           "broadcast": 1,
+          "dropAll": 1,
           "listen": 1
         }
       });

@@ -10,6 +10,7 @@ var _ = require('lodash')
   , os = require('os')
   , path = require('path')
   , request = require('request').defaults({jar: true})
+  , sinon = require('sinon')
   , temp = require('temp').track()
   , DevHelper = require('../../lib/dev/DevHelper')
   , WebSocket = require('ws')
@@ -17,7 +18,7 @@ var _ = require('lodash')
 
 
 describe('Development helpers', function() {
-  var devHelper, emissions, bc;
+  var devHelper, emissions, bc, mockServer;
   var testProjectsDir = path.join(__dirname, '..', 'test_projects');
 
   this.timeout(5000);
@@ -29,12 +30,16 @@ describe('Development helpers', function() {
 
   beforeEach(function(cb) {
     bc = fakedata.BaseConnection();
-    devHelper = new DevHelper(_.merge({}, config, {
+    var freshConfig = _.merge({}, config, {
       dev: {
         fs_poll_ms: 50,
         project_root: path.join(testProjectsDir, 'minimal'),
       }
-    }));
+    });
+    mockServer = {
+      bumpAllClients: sinon.stub(),
+    };
+    devHelper = new DevHelper(freshConfig, mockServer);
     emissions = [];
     devHelper.on('*', emissions.push.bind(emissions));
     if (process.env.VERBOSE) {
@@ -69,7 +74,7 @@ describe('Development helpers', function() {
         fs_poll_ms: 50,
         project_root: tmpdir,
       },
-    }));
+    }), mockServer);
     dh.start(function(err) {
       if (err) return cb(err);
       dh.once('server_package', function(package) {
@@ -97,7 +102,7 @@ describe('Development helpers', function() {
         fs_poll_ms: 50,
         project_root: tmpdir,
       },
-    }));
+    }), mockServer);
     dh.start(function(err) {
       if (err) return cb(err);
       dh.once('client_project_changed', function(package) {
@@ -119,7 +124,7 @@ describe('Development helpers', function() {
         fs_poll_ms: 50,
         project_root: path.join(testProjectsDir, 'nonstandard'),
       },
-    }));
+    }), mockServer);
     var serverChanged, clientChanged;
     dh.once('server_project_changed', function() {
       serverChanged = true;

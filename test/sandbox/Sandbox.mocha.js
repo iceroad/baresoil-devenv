@@ -114,16 +114,18 @@ describe('Sandbox', function() {
       function: 'test-logs',
       arguments: 123,
     });
-    sandbox.once('rpc_response', function(rpcResponse) {
+    sandbox.once('sandbox_exited', function(rpcResponse) {
       _.delay(function() {
-        assert.deepEqual(_.sortBy(_.map(emissions, _.first)), [
+        assert.deepEqual(_.sortBy(_.uniq(_.map(emissions, _.first))), [
+          // Must be in sorted order below
           'rpc_response',
+          'sandbox_exited',
           'sandbox_started',
           'sandbox_stderr',
           'sandbox_stdout',
         ]);
         return cb();
-      }, 20);
+      }, 50);
     });
   });
 
@@ -133,11 +135,7 @@ describe('Sandbox', function() {
     _.delay(function() {
       sandbox.accept('stop_sandbox');
     }, 20);
-    sandbox.once('sandbox_exited', function(rpcResponse) {
-      assert.deepEqual(_.map(emissions, _.first), [
-        'sandbox_started',
-        'sandbox_exited',
-      ]);
+    sandbox.once('sandbox_exited', function() {
       return cb();
     });
   });

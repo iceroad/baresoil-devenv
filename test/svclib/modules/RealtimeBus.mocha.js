@@ -78,7 +78,8 @@ describe('Svclib:RealtimeBus: real-time pub/sub message bus', function() {
       // Now call broadcast, and expect to pick up an stdlib_event.
       function(cb) {
         svclib.on('svclib_event', function(baseConnection, svclibEvent) {
-          assert.strictEqual(svclibEvent.name, 'channel_message');
+          assert.strictEqual(svclibEvent.module, 'RealtimeBus');
+          assert.strictEqual(svclibEvent.name, 'message');
           assert.deepEqual(svclibEvent.data, {
             channelId: testChannel,
             message: testMessage,
@@ -118,7 +119,8 @@ describe('Svclib:RealtimeBus: real-time pub/sub message bus', function() {
       function(cb) {
         var msgCount = 0;
         svclib.on('svclib_event', function(baseConnection, svclibEvent) {
-          assert.strictEqual(svclibEvent.name, 'channel_message');
+          assert.strictEqual(svclibEvent.module, 'RealtimeBus');
+          assert.strictEqual(svclibEvent.name, 'message');
           if (++msgCount === 2) {
             return cb();
           }
@@ -131,6 +133,59 @@ describe('Svclib:RealtimeBus: real-time pub/sub message bus', function() {
           assert.isNotOk(svclibResponse.error);
         });
       },
+    ], cb);
+  });
+
+
+  it('should drop all subscriptions on "sandbox_exited" events', function(cb) {
+    this.slow(300);
+
+    return async.series([
+      // First call listen() to subscribe to a few channel.
+      function(cb) {
+        return SvclibRequest('RealtimeBus', 'listen', [
+          {
+            channelId: testChannel,
+          },
+          {
+            channelId: testChannel + ':2',
+          },
+        ], function(baseConnection, svclibResponse) {
+          // Ensure set() returned without error.
+          assert.isNotOk(svclibResponse.error);
+          return cb();
+        });
+      },
+
+      // Send a "sandbox_exited" event to the service library and wait a bit.
+      function(cb) {
+        svclib.accept('sandbox_exited', baseConnection, {
+          code: 123
+        });
+        return _.delay(cb, 10);
+      },
+
+      // Send a broadcast on one of the channels and expect *no* "svclib_event"
+      // within a reasonable timeframe.
+      function(cb) {
+        var cbOnce = _.once(cb);
+        svclib.on('svclib_event', function() {
+          // Received a "svclib_event" even though a sandbox_exit was sent.
+          return cbOnce(new Error('unsubscribe on exit failed.'));
+        });
+        return SvclibRequest('RealtimeBus', 'broadcast', {
+          channelList: [testChannel],
+          message: 123
+        }, function(baseConnection, svclibResponse) {
+          // Ensure broadcast() returns without error.
+          assert.isNotOk(svclibResponse.error);
+
+          // Wait a reasonable time for any stray svclib_event messages to be
+          // received before ending the test.
+          _.delay(cbOnce, 10);
+        });
+      },
+
     ], cb);
   });
 
