@@ -1,6 +1,6 @@
 {
   "name": "baresoil-devenv",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Lightweight, local Baresoil Cloud emulator.",
   "bin": {
     "baresoil-dev": "lib/main.js",
@@ -23,20 +23,20 @@
     "colors": "^1.1.2",
     "cookie-parser": "^1.4.3",
     "express": "^4.15.2",
-    "fs-extra": "^2.0.0",
+    "fs-extra": "^2.1.2",
     "json-stable-stringify": "^1.0.1",
     "lodash": "^4.17.4",
     "mime": "^1.3.4",
     "minimist": "^1.2.0",
     "multer": "^1.3.0",
     "request": "^2.81.0",
-    "runtype": "^0.1.0",
+    "runtype": "^0.1.1",
     "stream-buffers": "^3.0.1",
-    "tar-fs": "^1.15.1",
+    "tar-fs": "^1.15.2",
     "temp": "^0.8.3",
     "validator": "^7.0.0",
     "walk": "^2.3.9",
-    "ws": "^2.2.0"
+    "ws": "^2.2.2"
   },
   "engines": {
     "node": ">=6.3.4"
@@ -46,6 +46,6 @@
     "depcheck": "^0.6.7",
     "istanbul": "^0.4.5",
     "mocha": "^3.2.0",
-    "sinon": "^1.17.7"
+    "sinon": "^2.1.0"
   }
 }
