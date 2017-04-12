@@ -1,6 +1,6 @@
 {
   "name": "baresoil-devenv",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "Lightweight, local Baresoil Cloud emulator.",
   "bin": {
     "baresoil-dev": "lib/main.js",
@@ -18,7 +18,7 @@
   "author": "Mayank Lahiri <mayank@iceroad.io>",
   "license": "Apache-2.0",
   "dependencies": {
-    "async": "^2.1.5",
+    "async": "^2.3.0",
     "baresoil-client": "^0.2.2",
     "colors": "^1.1.2",
     "cookie-parser": "^1.4.3",
@@ -36,7 +36,7 @@
     "temp": "^0.8.3",
     "validator": "^7.0.0",
     "walk": "^2.3.9",
-    "ws": "^2.2.2"
+    "ws": "^2.2.3"
   },
   "engines": {
     "node": ">=6.3.4"
