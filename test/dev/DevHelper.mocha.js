@@ -1,40 +1,37 @@
-var _ = require('lodash')
-  , assert = require('chai').assert
-  , async = require('async')
-  , config = require('../../lib/config/default')
-  , fakedata = require('../fakedata')
-  , fmt = require('util').format
-  , fs = require('fs')
-  , initLibrary = require('../../lib/types/initLibrary')
-  , json = JSON.stringify
-  , os = require('os')
-  , path = require('path')
-  , request = require('request').defaults({jar: true})
-  , sinon = require('sinon')
-  , temp = require('temp').track()
-  , DevHelper = require('../../lib/dev/DevHelper')
-  , WebSocket = require('ws')
+/* eslint no-undef: "ignore" */
+const _ = require('lodash'),
+  assert = require('chai').assert,
+  async = require('async'),
+  config = require('../../lib/config/default'),
+  fakedata = require('../fakedata'),
+  fs = require('fs'),
+  initLibrary = require('..//initLibrary'),
+  json = JSON.stringify,
+  path = require('path'),
+  sinon = require('sinon'),
+  temp = require('temp').track(),
+  DevHelper = require('../../lib/dev/DevHelper'),
+  WebSocket = require('ws')
   ;
 
 
-describe('Development helpers', function() {
-  var devHelper, emissions, bc, mockServer;
-  var testProjectsDir = path.join(__dirname, '..', 'test_projects');
+global.WebSocket = WebSocket;
+
+
+describe('Development helpers', function () {
+  let devHelper, emissions, bc, mockServer;
+  const testProjectsDir = path.join(__dirname, '..', 'test_projects');
 
   this.timeout(5000);
   this.slow(2000);
 
-  before(function() {
-    initLibrary();
-  });
-
-  beforeEach(function(cb) {
+  beforeEach((cb) => {
     bc = fakedata.BaseConnection();
-    var freshConfig = _.merge({}, config, {
+    const freshConfig = _.merge({}, config, {
       dev: {
         fs_poll_ms: 50,
         project_root: path.join(testProjectsDir, 'minimal'),
-      }
+      },
     });
     mockServer = {
       bumpAllClients: sinon.stub(),
@@ -48,13 +45,11 @@ describe('Development helpers', function() {
     return devHelper.start(cb);
   });
 
-  afterEach(function(cb) {
-    return devHelper.stop(cb);
-  });
+  afterEach(cb => devHelper.stop(cb));
 
 
-  it('should emit "server_package" after startup', function(cb) {
-    devHelper.once('server_package', function(packageStr) {
+  it('should emit "server_package" after startup', (cb) => {
+    devHelper.once('server_package', (packageStr) => {
       assert(packageStr);
       return cb();
     });
@@ -62,96 +57,92 @@ describe('Development helpers', function() {
 
 
   it('should emit "server_package" every time server project changes',
-      function(cb) {
+      (cb) => {
     // Create bogus temporary project that we can modify.
-    var tmpdir = temp.mkdirSync();
-    fs.mkdirSync(path.join(tmpdir, 'client'));
-    fs.mkdirSync(path.join(tmpdir, 'server'));
-    fs.writeFileSync(
-        path.join(tmpdir, 'server', 'fn-test.js'), 'test', 'utf-8');
-    var dh = new DevHelper(_.merge({}, config, {
-      dev: {
-        fs_poll_ms: 50,
-        project_root: tmpdir,
-      },
-    }), mockServer);
-    dh.start(function(err) {
-      if (err) return cb(err);
-      dh.once('server_package', function(package) {
-        // Received initial server package, make modification.
+        const tmpdir = temp.mkdirSync();
+        fs.mkdirSync(path.join(tmpdir, 'client'));
+        fs.mkdirSync(path.join(tmpdir, 'server'));
         fs.writeFileSync(
+        path.join(tmpdir, 'server', 'fn-test.js'), 'test', 'utf-8');
+        const dh = new DevHelper(_.merge({}, config, {
+          dev: {
+            fs_poll_ms: 50,
+            project_root: tmpdir,
+          },
+        }), mockServer);
+        dh.start((err) => {
+          if (err) return cb(err);
+          dh.once('server_package', () => {
+        // Received initial server package, make modification.
+            fs.writeFileSync(
             path.join(tmpdir, 'server', 'fn-test.js'), 'cat', 'utf-8');
-        dh.once('server_package', function() {
-          return cb();
-        })
+            dh.once('server_package', () => cb());
+          });
+        });
       });
-    })
-  });
 
 
   it('should emit "client_project_changed" every time client project changes',
-      function(cb) {
+      (cb) => {
     // Create bogus temporary project that we can modify.
-    var tmpdir = temp.mkdirSync();
-    fs.mkdirSync(path.join(tmpdir, 'client'));
-    fs.mkdirSync(path.join(tmpdir, 'server'));
-    fs.writeFileSync(
-        path.join(tmpdir, 'client', 'index.html'), 'test', 'utf-8');
-    var dh = new DevHelper(_.merge({}, config, {
-      dev: {
-        fs_poll_ms: 50,
-        project_root: tmpdir,
-      },
-    }), mockServer);
-    dh.start(function(err) {
-      if (err) return cb(err);
-      dh.once('client_project_changed', function(package) {
-        // Received initial server package, make modification.
+        const tmpdir = temp.mkdirSync();
+        fs.mkdirSync(path.join(tmpdir, 'client'));
+        fs.mkdirSync(path.join(tmpdir, 'server'));
         fs.writeFileSync(
+        path.join(tmpdir, 'client', 'index.html'), 'test', 'utf-8');
+        const dh = new DevHelper(_.merge({}, config, {
+          dev: {
+            fs_poll_ms: 50,
+            project_root: tmpdir,
+          },
+        }), mockServer);
+        dh.start((err) => {
+          if (err) return cb(err);
+          dh.once('client_project_changed', () => {
+        // Received initial server package, make modification.
+            fs.writeFileSync(
             path.join(tmpdir, 'client', 'index.html'), 'cat', 'utf-8');
-        dh.once('client_project_changed', function() {
-          dh.stop(cb);
-        })
+            dh.once('client_project_changed', () => {
+              dh.stop(cb);
+            });
+          });
+        });
       });
-    })
-  });
 
 
   it('should support nonstandard directory names specified in baresoil.json',
-      function(cb) {
-    var dh = new DevHelper(_.merge({}, config, {
-      dev: {
-        fs_poll_ms: 50,
-        project_root: path.join(testProjectsDir, 'nonstandard'),
-      },
-    }), mockServer);
-    var serverChanged, clientChanged;
-    dh.once('server_project_changed', function() {
-      serverChanged = true;
-      if (serverChanged && clientChanged) {
-        return dh.stop(cb);
-      }
-    });
-    dh.once('client_project_changed', function() {
-      clientChanged = true;
-      if (serverChanged && clientChanged) {
-        return dh.stop(cb);
-      }
-    });
-    dh.once('project_error', function(err) {
-      return cb(err);
-    })
-    dh.start(_.noop);
-  });
+      (cb) => {
+        const dh = new DevHelper(_.merge({}, config, {
+          dev: {
+            fs_poll_ms: 50,
+            project_root: path.join(testProjectsDir, 'nonstandard'),
+          },
+        }), mockServer);
+        let serverChanged, clientChanged;
+        dh.once('server_project_changed', () => {
+          serverChanged = true;
+          if (serverChanged && clientChanged) {
+            return dh.stop(cb);
+          }
+        });
+        dh.once('client_project_changed', () => {
+          clientChanged = true;
+          if (serverChanged && clientChanged) {
+            return dh.stop(cb);
+          }
+        });
+        dh.once('project_error', err => cb(err));
+        dh.start(_.noop);
+      });
 
 
   it('should respond to "http_request_incoming" messages by serving files ' +
-     'from the client project', function(cb) {
-    devHelper.once('client_project_changed', function() {
+     'from the client project', (cb) => {
+    devHelper.once('client_project_changed', () => {
       async.series([
 
-        // Root
-        function(cb) {
+        // Server root -> index.html
+        (cb) => {
           devHelper.accept('http_request_incoming', bc, {
             url: '/',
             cookies: {},
@@ -159,15 +150,17 @@ describe('Development helpers', function() {
             fields: {},
             method: 'GET',
           });
-          devHelper.once('http_send_response', function(resBc, httpResponse) {
+          devHelper.once('http_send_response', (resBc, httpResponse) => {
             assert.deepEqual(bc, resBc);
+            assert.strictEqual(
+                httpResponse.headers['Content-Type'], 'text/html');
             assert.strictEqual(httpResponse.statusCode, 200);
-            return cb();
+            _.defer(cb);
           });
         },
 
         // Image inside directory.
-        function(cb) {
+        (cb) => {
           devHelper.accept('http_request_incoming', bc, {
             url: '/img/sample.jpg',
             cookies: {},
@@ -175,12 +168,12 @@ describe('Development helpers', function() {
             fields: {},
             method: 'GET',
           });
-          devHelper.once('http_send_response', function(resBc, httpResponse) {
+          devHelper.once('http_send_response', (resBc, httpResponse) => {
             assert.deepEqual(bc, resBc);
             assert.strictEqual(httpResponse.statusCode, 200);
             assert.strictEqual(
                 httpResponse.headers['Content-Type'], 'image/jpeg');
-            return cb();
+            _.defer(cb);
           });
         },
 
@@ -190,12 +183,17 @@ describe('Development helpers', function() {
 
 
   it('should respond to "http_request_incoming" messages by serving 404s ' +
-     'for bad links', function(cb) {
-    devHelper.once('client_project_changed', function() {
+     'for bad links', (cb) => {
+    devHelper.once('client_project_changed', () => {
       async.series([
 
         // Legitimate 404
-        function(cb) {
+        (cb) => {
+          devHelper.once('http_send_response', (resBc, httpResponse) => {
+            assert.deepEqual(bc, resBc);
+            assert.strictEqual(httpResponse.statusCode, 404);
+            _.defer(cb);
+          });
           devHelper.accept('http_request_incoming', bc, {
             url: '/sample.jpg',
             cookies: {},
@@ -203,15 +201,15 @@ describe('Development helpers', function() {
             fields: {},
             method: 'GET',
           });
-          devHelper.once('http_send_response', function(resBc, httpResponse) {
-            assert.deepEqual(bc, resBc);
-            assert.strictEqual(httpResponse.statusCode, 404);
-            return cb();
-          });
         },
 
         // URL resolves outside source directory
-        function(cb) {
+        (cb) => {
+          devHelper.once('http_send_response', (resBc, httpResponse) => {
+            assert.deepEqual(bc, resBc);
+            assert.strictEqual(httpResponse.statusCode, 404);
+            _.defer(cb);
+          });
           devHelper.accept('http_request_incoming', bc, {
             url: '/../../DevHelper.mocha.js',
             cookies: {},
@@ -219,13 +217,7 @@ describe('Development helpers', function() {
             fields: {},
             method: 'GET',
           });
-          devHelper.once('http_send_response', function(resBc, httpResponse) {
-            assert.deepEqual(bc, resBc);
-            assert.strictEqual(httpResponse.statusCode, 404);
-            return cb();
-          });
         },
-
       ], cb);
     });
   });

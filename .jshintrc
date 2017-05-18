@@ -1,7 +1,0 @@
-{
-  "trailing": true,
-  "es5": true,
-  "esnext": true,
-  "laxcomma": true,
-  "asi": true
-}

@@ -1,0 +1,814 @@
+{
+  "BaresoilJson": {
+    "name": "BaresoilJson",
+    "type": "object",
+    "fields": {
+      "client": {
+        "type": "object",
+        "optional": true,
+        "fields": {
+          "path": {
+            "type": "string",
+            "optional": true
+          },
+          "hooks": {
+            "type": "array",
+            "optional": true,
+            "elementType": {
+              "type": "object",
+              "fields": {
+                "type": {
+                  "type": "factor",
+                  "factors": [
+                    "dev-server",
+                    "build",
+                    "init"
+                  ]
+                },
+                "command": {
+                  "type": "string"
+                },
+                "workingDir": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string",
+                  "optional": true
+                }
+              }
+            }
+          },
+          "cachePolicies": {
+            "type": "array",
+            "optional": true,
+            "elementType": {
+              "type": "object",
+              "fields": {
+                "name": {
+                  "type": "string",
+                  "optional": true
+                },
+                "match": {
+                  "type": "string"
+                },
+                "maxAge": {
+                  "type": "integer",
+                  "minValue": 1
+                }
+              }
+            }
+          }
+        }
+      },
+      "server": {
+        "type": "object",
+        "optional": true,
+        "fields": {
+          "path": {
+            "type": "string",
+            "optional": true
+          }
+        }
+      }
+    }
+  },
+  "BaseConnection": {
+    "name": "BaseConnection",
+    "type": "object",
+    "fields": {
+      "appId": {
+        "type": "integer",
+        "minValue": 1,
+        "maxValue": 9007199254740991
+      },
+      "clientId": {
+        "type": "hex_buffer",
+        "minLength": 10,
+        "maxLength": 80
+      },
+      "hostname": {
+        "type": "string",
+        "minLength": 6,
+        "maxLength": 64
+      },
+      "origin": {
+        "type": "string",
+        "optional": true
+      },
+      "remoteAddress": {
+        "type": "ip_address",
+        "minLength": 7,
+        "maxLength": 45
+      },
+      "connectedAt": {
+        "type": "epoch_timestamp_ms"
+      },
+      "protocol": {
+        "type": "factor",
+        "factors": [
+          "http",
+          "ws"
+        ]
+      }
+    }
+  },
+  "HttpRequestIncoming": {
+    "name": "HttpRequestIncoming",
+    "type": "object",
+    "fields": {
+      "files": {
+        "type": "array"
+      },
+      "fields": {
+        "type": "object"
+      },
+      "headers": {
+        "type": "object",
+        "maxSize": 32768
+      },
+      "method": {
+        "type": "string",
+        "minLength": 3,
+        "maxLength": 16
+      },
+      "cookies": {
+        "type": "object",
+        "maxSize": 8192
+      },
+      "url": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 2048
+      }
+    }
+  },
+  "HttpResponseOutgoing": {
+    "name": "HttpResponseOutgoing",
+    "type": "object",
+    "fields": {
+      "statusCode": {
+        "type": "integer",
+        "minValue": 100,
+        "maxValue": 599
+      },
+      "body": {
+        "type": "base64_buffer",
+        "optional": true,
+        "maxSize": 26214400
+      },
+      "headers": {
+        "type": "object",
+        "optional": true,
+        "maxSize": 16384
+      }
+    }
+  },
+  "RpcRequest": {
+    "name": "RpcRequest",
+    "type": "object",
+    "fields": {
+      "requestId": {
+        "type": "integer"
+      },
+      "function": {
+        "type": "string",
+        "maxLength": 200
+      },
+      "arguments": {
+        "type": "any",
+        "maxSize": 26214400
+      }
+    }
+  },
+  "RpcResponse": {
+    "type": "object",
+    "name": "RpcResponse",
+    "fields": {
+      "requestId": {
+        "type": "integer"
+      },
+      "error": {
+        "type": "object",
+        "optional": true,
+        "maxSize": 16384
+      },
+      "result": {
+        "type": "any",
+        "maxSize": 26214400
+      }
+    }
+  },
+  "SvclibEvent": {
+    "name": "SvclibEvent",
+    "type": "object",
+    "fields": {
+      "service": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "data": {
+        "type": "any",
+        "optional": true,
+        "maxSize": 16384
+      }
+    }
+  },
+  "SvclibRequest": {
+    "name": "SvclibRequest",
+    "type": "object",
+    "fields": {
+      "requestId": {
+        "type": "integer"
+      },
+      "service": {
+        "type": "alphanumeric",
+        "maxLength": 80
+      },
+      "function": {
+        "type": "alphanumeric",
+        "maxLength": 80
+      },
+      "arguments": {
+        "type": "array"
+      }
+    }
+  },
+  "SvclibResponse": {
+    "name": "SvclibResponse",
+    "type": "object",
+    "fields": {
+      "requestId": {
+        "type": "integer"
+      },
+      "error": {
+        "type": "any"
+      },
+      "result": {
+        "type": "any"
+      }
+    }
+  },
+  "UserEvent": {
+    "name": "UserEvent",
+    "type": "object",
+    "fields": {
+      "name": {
+        "type": "string",
+        "maxLength": 64
+      },
+      "data": {
+        "type": "any",
+        "maxSize": 5242880,
+        "optional": true
+      }
+    }
+  },
+  "UserlandBootstrap": {
+    "name": "UserlandBootstrap",
+    "type": "object",
+    "fields": {
+      "package": {
+        "type": "base64_buffer"
+      },
+      "svclibInterface": {
+        "type": "object"
+      },
+      "baseConnection": {
+        "type": "BaseConnection"
+      }
+    }
+  },
+  "KVPair": {
+    "name": "KVPair",
+    "type": "object",
+    "fields": {
+      "table": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 64
+      },
+      "key": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+      },
+      "exists": {
+        "type": "boolean",
+        "optional": true
+      },
+      "value": {
+        "type": "any",
+        "optional": true,
+        "minSize": 1,
+        "maxSize": 10485760
+      },
+      "valueId": {
+        "type": "base64_buffer",
+        "optional": true
+      },
+      "valueSize": {
+        "type": "integer",
+        "optional": true,
+        "minValue": 1,
+        "maxValue": 10485760
+      },
+      "created": {
+        "type": "epoch_timestamp_ms",
+        "optional": true
+      },
+      "modified": {
+        "type": "epoch_timestamp_ms",
+        "optional": true
+      },
+      "cacheMs": {
+        "type": "integer",
+        "optional": true
+      },
+      "expires": {
+        "type": "epoch_timestamp_ms",
+        "optional": true
+      }
+    }
+  },
+  "KVPairMetadata": {
+    "name": "KVPairMetadata",
+    "type": "object",
+    "fields": {
+      "table": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 64
+      },
+      "key": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+      },
+      "exists": {
+        "type": "boolean",
+        "optional": true
+      },
+      "valueId": {
+        "type": "base64_buffer",
+        "optional": true
+      },
+      "valueSize": {
+        "type": "integer",
+        "optional": true,
+        "minValue": 1,
+        "maxValue": 10485760
+      },
+      "created": {
+        "type": "epoch_timestamp_ms",
+        "optional": true
+      },
+      "modified": {
+        "type": "epoch_timestamp_ms",
+        "optional": true
+      },
+      "cacheMs": {
+        "type": "integer",
+        "optional": true
+      },
+      "expires": {
+        "type": "epoch_timestamp_ms",
+        "optional": true
+      }
+    }
+  },
+  "KVSetItem": {
+    "name": "KVSetItem",
+    "type": "object",
+    "fields": {
+      "table": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 64
+      },
+      "key": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+      },
+      "value": {
+        "type": "any",
+        "optional": true,
+        "minSize": 1,
+        "maxSize": 10485760
+      },
+      "cacheMs": {
+        "type": "integer",
+        "optional": true
+      },
+      "expires": {
+        "type": "epoch_timestamp_ms",
+        "optional": true
+      }
+    }
+  },
+  "KVGetItem": {
+    "name": "KVGetItem",
+    "type": "object",
+    "fields": {
+      "table": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 64
+      },
+      "key": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+      }
+    }
+  },
+  "KVUpdateItem": {
+    "name": "KVUpdateItem",
+    "type": "object",
+    "fields": {
+      "table": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 64
+      },
+      "key": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+      },
+      "exists": {
+        "type": "boolean",
+        "optional": true
+      },
+      "valueId": {
+        "type": "base64_buffer",
+        "optional": true
+      },
+      "delete": {
+        "type": "boolean",
+        "optional": true
+      },
+      "value": {
+        "type": "any",
+        "optional": true
+      },
+      "cacheMs": {
+        "type": "integer",
+        "optional": true
+      },
+      "expires": {
+        "type": "epoch_timestamp_ms",
+        "optional": true
+      }
+    },
+    "ignored": [
+      "created",
+      "modified",
+      "valueSize"
+    ]
+  },
+  "KVListRequest": {
+    "name": "KVListRequest",
+    "type": "object",
+    "fields": {
+      "table": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 64
+      },
+      "query": {
+        "type": "object",
+        "optional": true,
+        "fields": {
+          "keyPrefix": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "optional": true
+          }
+        }
+      },
+      "limit": {
+        "type": "integer",
+        "optional": true,
+        "minValue": 1,
+        "maxValue": 1000
+      },
+      "sort": {
+        "type": "object",
+        "optional": true,
+        "fields": {
+          "criteria": {
+            "type": "factor",
+            "factors": [
+              "key",
+              "created",
+              "modified",
+              "size",
+              "expiration"
+            ]
+          },
+          "direction": {
+            "type": "factor",
+            "factors": [
+              "ascending",
+              "descending"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "RBChannelCensus": {
+    "name": "RBChannelCensus",
+    "type": "object",
+    "fields": {
+      "channelId": {
+        "nane": "channelId",
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 64
+      },
+      "listeners": {
+        "type": "array",
+        "elementType": {
+          "type": "object",
+          "fields": {
+            "clientId": {
+              "type": "hex_buffer",
+              "minLength": 10,
+              "maxLength": 80
+            },
+            "status": {
+              "type": "any",
+              "nane": "status",
+              "optional": true,
+              "maxSize": 1024
+            }
+          }
+        }
+      }
+    }
+  },
+  "RBChannelListenRequest": {
+    "name": "RBChannelListenRequest",
+    "type": "object",
+    "fields": {
+      "channelId": {
+        "nane": "channelId",
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 64
+      },
+      "once": {
+        "type": "boolean",
+        "optional": true,
+        "default": false
+      },
+      "status": {
+        "type": "any",
+        "nane": "status",
+        "optional": true,
+        "maxSize": 1024
+      }
+    }
+  },
+  "RBChannelMessage": {
+    "name": "RBChannelMessage",
+    "type": "object",
+    "fields": {
+      "channelId": {
+        "nane": "channelId",
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 64
+      },
+      "data": {
+        "nane": "dataPayload",
+        "type": "any",
+        "maxSize": 8192
+      }
+    }
+  },
+  "RBChannelSubscription": {
+    "name": "RBChannelSubscription",
+    "type": "object",
+    "fields": {
+      "channelId": {},
+      "once": {
+        "type": "boolean",
+        "optional": true,
+        "default": false
+      }
+    }
+  },
+  "RBBroadcastResponse": {
+    "name": "RBBroadcastResponse",
+    "type": "object",
+    "fields": {
+      "delivered": {
+        "type": "array",
+        "minElements": 1,
+        "maxElements": 10,
+        "elementType": "boolean"
+      }
+    }
+  },
+  "RBBroadcastRequest": {
+    "name": "RBBroadcastRequest",
+    "type": "object",
+    "fields": {
+      "channelList": {
+        "type": "array",
+        "minElements": 1,
+        "maxElements": 10,
+        "elementType": {
+          "nane": "channelId",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        }
+      },
+      "message": {
+        "nane": "dataPayload",
+        "type": "any",
+        "maxSize": 8192
+      }
+    }
+  },
+  "RBStatusChangeRequest": {
+    "name": "RBStatusChangeRequest",
+    "type": "object",
+    "fields": {
+      "channelId": {
+        "nane": "channelId",
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 64
+      },
+      "status": {
+        "type": "any",
+        "nane": "status",
+        "optional": true,
+        "maxSize": 1024
+      }
+    }
+  },
+  "WSFileMetadata": {
+    "name": "WSFileMetadata",
+    "type": "object",
+    "fields": {
+      "path": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 200
+      },
+      "contentType": {
+        "type": "string",
+        "optional": true,
+        "minLength": 6,
+        "maxLength": 127
+      },
+      "maxAge": {
+        "type": "integer",
+        "optional": true,
+        "minValue": 0
+      },
+      "expiresAt": {
+        "type": "epoch_timestamp_ms",
+        "optional": true
+      },
+      "deleteAfter": {
+        "type": "epoch_timestamp_ms",
+        "optional": true
+      },
+      "downloadFilename": {
+        "type": "string",
+        "optional": true,
+        "maxLength": 128
+      },
+      "size": {
+        "type": "integer"
+      },
+      "lastModified": {
+        "type": "epoch_timestamp_ms"
+      },
+      "etag": {
+        "type": "string"
+      }
+    }
+  },
+  "WSFile": {
+    "name": "WSFile",
+    "type": "object",
+    "fields": {
+      "path": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 200
+      },
+      "contentType": {
+        "type": "string",
+        "optional": true,
+        "minLength": 6,
+        "maxLength": 127
+      },
+      "maxAge": {
+        "type": "integer",
+        "optional": true,
+        "minValue": 0
+      },
+      "expiresAt": {
+        "type": "epoch_timestamp_ms",
+        "optional": true
+      },
+      "deleteAfter": {
+        "type": "epoch_timestamp_ms",
+        "optional": true
+      },
+      "downloadFilename": {
+        "type": "string",
+        "optional": true,
+        "maxLength": 128
+      },
+      "size": {
+        "type": "integer"
+      },
+      "lastModified": {
+        "type": "epoch_timestamp_ms"
+      },
+      "etag": {
+        "type": "string"
+      },
+      "data": {
+        "type": "base64_buffer",
+        "minLength": 1,
+        "maxLength": 26214400
+      }
+    }
+  },
+  "WSPutRequest": {
+    "name": "WSFilePutRequest",
+    "type": "object",
+    "fields": {
+      "path": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 200
+      },
+      "data": {
+        "type": "base64_buffer",
+        "minLength": 1,
+        "maxLength": 26214400
+      },
+      "contentType": {
+        "type": "string",
+        "optional": true,
+        "minLength": 6,
+        "maxLength": 127
+      },
+      "maxAge": {
+        "type": "integer",
+        "optional": true,
+        "minValue": 0
+      },
+      "expiresAt": {
+        "type": "epoch_timestamp_ms",
+        "optional": true
+      },
+      "deleteAfter": {
+        "type": "epoch_timestamp_ms",
+        "optional": true
+      },
+      "downloadFilename": {
+        "type": "string",
+        "optional": true,
+        "maxLength": 128
+      }
+    }
+  },
+  "WSGetRequest": {
+    "name": "WSGetRequest",
+    "type": "object",
+    "fields": {
+      "path": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 200
+      }
+    }
+  },
+  "WSDeleteRequest": {
+    "name": "WSDeleteRequest",
+    "type": "object",
+    "fields": {
+      "path": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 200
+      }
+    }
+  }
+}

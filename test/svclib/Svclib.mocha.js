@@ -1,27 +1,20 @@
-var _ = require('lodash')
-  , assert = require('chai').assert
-  , config = require('../../lib/config/default')
-  , crypto = require('crypto')
-  , fakedata = require('../fakedata')
-  , fmt = require('util').format
-  , fs = require('fs')
-  , initLibrary = require('../../lib/types/initLibrary')
-  , json = JSON.stringify
-  , temp = require('temp').track()
-  , sinon = require('sinon')
-  , util = require('util')
-  , Svclib = require('../../lib/svclib/Svclib')
+/* eslint no-undef: "ignore" */
+const _ = require('lodash'),
+  assert = require('chai').assert,
+  config = require('../../lib/config/default'),
+  fakedata = require('../fakedata'),
+  initLibrary = require('../initLibrary'),
+  json = JSON.stringify,
+  temp = require('temp').track(),
+  sinon = require('sinon'),
+  Svclib = require('../../lib/svclib/Svclib')
   ;
 
 
-describe('Svclib: Baresoil service library', function() {
-  var svclib, emissions, baseConnection;
+describe('Svclib: Baresoil service library', () => {
+  let svclib, emissions, baseConnection;
 
-  before(function() {
-    initLibrary();
-  });
-
-  beforeEach(function(cb) {
+  beforeEach((cb) => {
     baseConnection = fakedata.BaseConnection();
     svclib = new Svclib(_.merge({}, config, {
       dev: {
@@ -30,18 +23,29 @@ describe('Svclib: Baresoil service library', function() {
       },
     }));
     emissions = [];
-    svclib.on('*', emissions.push.bind(emissions));
+    svclib.on('*', (...argsArray) => {
+      if (process.env.VERBOSE) {
+        console.log(json(argsArray));
+      }
+      emissions.push(argsArray);
+    });
     return svclib.start(cb);
   });
 
-  afterEach(function(cb) {
+  afterEach((cb) => {
     return svclib.stop(cb);
   });
 
 
-  it('should route "svclib_request" to the correct module' , function(cb) {
-    var kvdSetStub = sinon.stub(
+  it('should route "svclib_request" to the correct module', (cb) => {
+    const kvdSetStub = sinon.stub(
         svclib.modules_.KVDataStore.$functions, 'set').yields();
+    svclib.once('svclib_response', (baseConnection, svclibResponse) => {
+      assert.isNotOk(svclibResponse.error);
+      assert(kvdSetStub.calledOnce);
+      svclib.modules_.KVDataStore.$functions.set.restore();
+      return cb();
+    });
     svclib.accept('svclib_request', baseConnection, {
       requestId: 3,
       service: 'KVDataStore',
@@ -49,40 +53,34 @@ describe('Svclib: Baresoil service library', function() {
       arguments: [
         {
           table: 'unit_test',
-          key: 'test_key_' + _.random(1e10),
+          key: `test_key_${_.random(1e10)}`,
           value: _.random(),
         },
       ],
     });
-    svclib.on('svclib_response', function(baseConnection, svclibResponse) {
-      assert.isNotOk(svclibResponse.error);
-      assert(kvdSetStub.calledOnce);
-      svclib.modules_.KVDataStore.$functions.set.restore();
-      return cb();
-    });
   });
 
 
-  it('should emit "svclib_interface" on start' , function(cb) {
-    _.delay(function() {
+  it('should emit "svclib_interface" on start', (cb) => {
+    _.delay(() => {
       assert.strictEqual(emissions.length, 1);
       assert.strictEqual(emissions[0][0], 'svclib_interface');
-      var svclibInterface = emissions[0][1];
+      const svclibInterface = emissions[0][1];
       assert(_.isObject(svclibInterface));
       assert.deepEqual(svclibInterface, {
-        "KVDataStore": {
-          "get": 1,
-          "set": 1,
-          "update": 1
+        KVDataStore: {
+          get: 1,
+          set: 1,
+          update: 1,
         },
-        "RealtimeBus": {
-          "broadcast": 1,
-          "dropAll": 1,
-          "listen": 1
-        }
+        RealtimeBus: {
+          broadcast: 1,
+          dropAll: 1,
+          listen: 1,
+          setStatus: 1,
+        },
       });
       return cb();
     }, 10);
   });
-
 });

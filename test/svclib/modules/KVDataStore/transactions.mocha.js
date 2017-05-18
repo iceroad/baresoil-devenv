@@ -1,29 +1,29 @@
 var _ = require('lodash')
   , assert = require('chai').assert
   , async = require('async')
+  , colors = require('colors')
   , crypto = require('crypto')
   , fmt = require('util').format
   , json = JSON.stringify
-  , Harness = require('./Harness')
+  , Harness = require('../Harness')
   ;
 
 
-describe('KVDataStore: ' + 'update()'.cyan, function() {
-  var harness = new Harness();
+describe('KVDataStore: ' + 'transactions'.cyan, function() {
+  const harness = new Harness();
+  var testKey, testValue;
 
   this.slow(500);
 
-  before(function(cb) {
-    return harness.init(cb);
-  });
+  before(harness.before.bind(harness));
 
   beforeEach(function(cb) {
+    testKey = 'test, key 💩 ' + _.random(0, 1e10);
+    testValue = crypto.randomBytes(20).toString('base64');
     return harness.beforeEach(cb);
   });
 
-  afterEach(function(cb) {
-    return harness.afterEach(cb);
-  });
+  afterEach(harness.afterEach.bind(harness));
 
 
   it('failed transactions should roll back', function(cb) {
@@ -33,7 +33,7 @@ describe('KVDataStore: ' + 'update()'.cyan, function() {
     return async.series([
       // initial call to set() the key.
       function(cb) {
-        return harness.SvclibRequest('KVDataStore', 'set', [
+        return harness.run('KVDataStore', 'set', [
           {
             table: 'unit_test',
             key: key_1,
@@ -53,7 +53,7 @@ describe('KVDataStore: ' + 'update()'.cyan, function() {
 
       // Then call get() on the same key to start a read-modify-write cycle.
       function(cb) {
-        return harness.SvclibRequest('KVDataStore', 'get', [
+        return harness.run('KVDataStore', 'get', [
           {
             table: 'unit_test',
             key: key_1,
@@ -79,7 +79,7 @@ describe('KVDataStore: ' + 'update()'.cyan, function() {
 
           // Change the value and call update() again to complete the
           // read-modify-write cycle.
-          harness.SvclibRequest('KVDataStore', 'update', items, function(
+          harness.run('KVDataStore', 'update', items, function(
               err, items) {
             // Ensure update() fails due to the conflict on key_2.
             assert.isOk(err);
@@ -92,7 +92,7 @@ describe('KVDataStore: ' + 'update()'.cyan, function() {
 
       // Ensure that the keys have been correctly rolled back.
       function (cb) {
-        return harness.SvclibRequest('KVDataStore', 'get', [
+        return harness.run('KVDataStore', 'get', [
           {
             table: 'unit_test',
             key: key_1,

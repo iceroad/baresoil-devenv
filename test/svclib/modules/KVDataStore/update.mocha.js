@@ -1,29 +1,29 @@
 var _ = require('lodash')
   , assert = require('chai').assert
   , async = require('async')
+  , colors = require('colors')
   , crypto = require('crypto')
   , fmt = require('util').format
   , json = JSON.stringify
-  , Harness = require('./Harness')
+  , Harness = require('../Harness')
   ;
 
 
 describe('KVDataStore: ' + 'update()'.cyan, function() {
-  var harness = new Harness();
+  const harness = new Harness();
+  var testKey, testValue;
 
   this.slow(500);
 
-  before(function(cb) {
-    return harness.init(cb);
-  });
+  before(harness.before.bind(harness));
 
   beforeEach(function(cb) {
+    testKey = 'test, key 💩 ' + _.random(0, 1e10);
+    testValue = crypto.randomBytes(20).toString('base64');
     return harness.beforeEach(cb);
   });
 
-  afterEach(function(cb) {
-    return harness.afterEach(cb);
-  });
+  afterEach(harness.afterEach.bind(harness));
 
 
   it('should insert new key if it does not exist', function(cb) {
@@ -33,7 +33,7 @@ describe('KVDataStore: ' + 'update()'.cyan, function() {
     return async.series([
       // update() without modifiers should insert a new value.
       function(cb) {
-        return harness.SvclibRequest('KVDataStore', 'update', [
+        return harness.run('KVDataStore', 'update', [
           {
             table: 'unit test \'?!;;\'',
             key: testKey,
@@ -58,7 +58,7 @@ describe('KVDataStore: ' + 'update()'.cyan, function() {
 
       // Then call get() on the same key.
       function(cb) {
-        return harness.SvclibRequest('KVDataStore', 'get', [
+        return harness.run('KVDataStore', 'get', [
           {
             table: 'unit test \'?!;;\'',
             key: testKey,
@@ -87,11 +87,11 @@ describe('KVDataStore: ' + 'update()'.cyan, function() {
     return async.series([
       // initial call to set() the key.
       function(cb) {
-        return harness.SvclibRequest('KVDataStore', 'set', [
+        return harness.run('KVDataStore', 'set', [
           {
             table: 'unit test \'?!;;\'',
-            key: harness.testKey,
-            value: harness.testValue,
+            key: testKey,
+            value: testValue,
           },
         ], function(error, items) {
           // Ensure set() returned without error.
@@ -107,7 +107,7 @@ describe('KVDataStore: ' + 'update()'.cyan, function() {
       // Use the same kvPair returned by set() to perform a new value update.
       function(cb) {
         kvPair.value = newValue;
-        return harness.SvclibRequest('KVDataStore', 'update', [kvPair],
+        return harness.run('KVDataStore', 'update', [kvPair],
             function(error, items) {
           // Ensure update() succeeded.
           assert.isNotOk(error, error);
@@ -120,9 +120,9 @@ describe('KVDataStore: ' + 'update()'.cyan, function() {
 
       // Retrieve the key again and ensure the new value.
       function(cb) {
-        return harness.SvclibRequest('KVDataStore', 'get', [{
+        return harness.run('KVDataStore', 'get', [{
           table: 'unit test \'?!;;\'',
-          key: harness.testKey,
+          key: testKey,
         }], function(error, items) {
           // Ensure update() succeeded.
           assert.isNotOk(error, error);
@@ -144,11 +144,11 @@ describe('KVDataStore: ' + 'update()'.cyan, function() {
     return async.series([
       // initial call to set() the key.
       function(cb) {
-        return harness.SvclibRequest('KVDataStore', 'set', [
+        return harness.run('KVDataStore', 'set', [
           {
             table: 'unit test \'?!;;\'',
-            key: harness.testKey,
-            value: harness.testValue,
+            key: testKey,
+            value: testValue,
           },
         ], function(error, items) {
           // Ensure set() returned without error.
@@ -163,14 +163,14 @@ describe('KVDataStore: ' + 'update()'.cyan, function() {
 
       // Attempt to update the key without upsert.
       function(cb) {
-        return harness.SvclibRequest('KVDataStore', 'update', [{
+        return harness.run('KVDataStore', 'update', [{
           table: 'unit test \'?!;;\'',
-          key: harness.testKey,
+          key: testKey,
           value: newValue,
         }], function(error, items) {
           // Ensure update() failed.
           assert.strictEqual(error.code, 'conflict');
-          assert.strictEqual(error.key, harness.testKey);
+          assert.strictEqual(error.key, testKey);
           assert.strictEqual(error.table, 'unit test \'?!;;\'');
           assert.isUndefined(items);
           return cb();
@@ -184,21 +184,21 @@ describe('KVDataStore: ' + 'update()'.cyan, function() {
     return async.series([
       // initial call to set() the key.
       function(cb) {
-        return harness.SvclibRequest('KVDataStore', 'set', [
+        return harness.run('KVDataStore', 'set', [
           {
             table: 'unit_test',
-            key: harness.testKey,
-            value: harness.testValue,
+            key: testKey,
+            value: testValue,
           },
         ], cb);
       },
 
       // call get, then update with the delete flag.
       function(cb) {
-        return harness.SvclibRequest('KVDataStore', 'get', [
+        return harness.run('KVDataStore', 'get', [
           {
             table: 'unit_test',
-            key: harness.testKey,
+            key: testKey,
           },
         ], function(err, items) {
           // This should return an error.
@@ -208,7 +208,7 @@ describe('KVDataStore: ' + 'update()'.cyan, function() {
 
           // Mark the deletion flag.
           items[0].delete = true;
-          return harness.SvclibRequest('KVDataStore', 'update', items,
+          return harness.run('KVDataStore', 'update', items,
               function(err, items) {
             assert.isNotOk(err);
             assert.isOk(items[0]);
@@ -219,10 +219,10 @@ describe('KVDataStore: ' + 'update()'.cyan, function() {
 
       // Final get() should not return the kvPair anymore.
       function(cb) {
-        return harness.SvclibRequest('KVDataStore', 'get', [
+        return harness.run('KVDataStore', 'get', [
           {
             table: 'unit_test',
-            key: harness.testKey,
+            key: testKey,
           },
         ], function(err, items) {
           // This should not return an error.
@@ -236,6 +236,4 @@ describe('KVDataStore: ' + 'update()'.cyan, function() {
       },
     ], cb);
   });
-
-
 });

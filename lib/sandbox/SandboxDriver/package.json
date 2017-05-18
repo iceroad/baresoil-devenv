@@ -6,7 +6,8 @@
   "author": "Mayank Lahiri <mayank@iceroad.io>",
   "license": "Apache-2.0",
   "dependencies": {
+    "event-io": "^0.1.7",
     "lodash": "^4.17.4",
-    "runtype": "^0.1.1"
+    "runtype": "^0.1.5"
   }
 }
